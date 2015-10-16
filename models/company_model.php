@@ -200,16 +200,16 @@ class Company extends Model{
         }
     }
 
-    public function get_all_contact($params)
+    public function get_all_contacts($params)
     {
         $v = new Valitron\Validator($params);
-        $v->rule('required', ['token', 'id']);
+        $v->rule('required', ['token']);
 
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
-                $sql = 'SELECT cu.id_company, c.name FROM company_has_user as cu INNER JOIN company as c ON c.id = cu.id_company WHERE cu.id_user= :userid AND c.deleted_at IS NULL';
+                $sql = 'SELECT c.id, c.company FROM company_has_contact as cc INNER JOIN contact as c ON c.id = cc.contact_id WHERE cc.company_id = :company_id';
                 $query = $this->db->prepare($sql);
-                $parameters = array(':userid' => $token['id_user']);
+                $parameters = array(':company_id' => $token['id_company']);
                 $query->execute($parameters);
                 $result = $query->fetchAll(PDO::FETCH_ASSOC);
                 return $result;

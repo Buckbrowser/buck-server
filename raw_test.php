@@ -23,8 +23,7 @@ echo '<pre>';
 //    'password' => 'test',
 //)));
 
-print_r(BuckBrowser::load_model('Contact')->read(array(
-    'token' => '521be4861056d8f3d8779b3730308b35a28ff3a7acb0f5ce03c0fa40fdd0cec06048322784b572852dc85e85f911ba0283c464ae7889b55ade7cc659a2da2547',
-    'id' => 1
+print_r(BuckBrowser::load_model('Company')->get_all_contacts(array(
+    'token' => '521be4861056d8f3d8779b3730308b35a28ff3a7acb0f5ce03c0fa40fdd0cec06048322784b572852dc85e85f911ba0283c464ae7889b55ade7cc659a2da2547'
 )));
 echo '</pre>';
