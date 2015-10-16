@@ -113,8 +113,8 @@ class Company extends Model{
         $query = $this->db->prepare($sql);
         $parameters = array(':id_company' => $id);
         $query->execute($parameters);
-        $result = $query->fetch();
         if($query->rowCount() > 0) {
+            $result = $query->fetch();
             return array(
                 'name' => $result->name,
                 'street_name' => $result->street_name,
@@ -192,6 +192,27 @@ class Company extends Model{
                 } else {
                     return $this->update_error(array_keys($v->errors()));
                 }
+            } else {
+                return $this->auth_error();
+            }
+        } else {
+            return $this->param_error();
+        }
+    }
+
+    public function get_all_contact($params)
+    {
+        $v = new Valitron\Validator($params);
+        $v->rule('required', ['token', 'id']);
+
+        if ($v->validate()) {
+            if (($token = $this->token->validate($params['token'])) !== false) {
+                $sql = 'SELECT cu.id_company, c.name FROM company_has_user as cu INNER JOIN company as c ON c.id = cu.id_company WHERE cu.id_user= :userid AND c.deleted_at IS NULL';
+                $query = $this->db->prepare($sql);
+                $parameters = array(':userid' => $token['id_user']);
+                $query->execute($parameters);
+                $result = $query->fetchAll(PDO::FETCH_ASSOC);
+                return $result;
             } else {
                 return $this->auth_error();
             }

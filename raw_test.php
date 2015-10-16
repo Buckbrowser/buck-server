@@ -23,8 +23,8 @@ echo '<pre>';
 //    'password' => 'test',
 //)));
 
-print_r(BuckBrowser::load_model('Company')->delete(array(
-    'token' => 'dcdc285474afa3d099f5db6c5bb06f6b9abbbf0495b6a03ef855b12583e7d62ce67bf41a50510a95983c7c5299692124f18cdf644f96293d80ed144224c48073',
-    'verification_code' => '043c6824150ad62a596106d2c99c917367f3b3a7189ae0d092c0a4ae7b1992c9'
+print_r(BuckBrowser::load_model('Contact')->read(array(
+    'token' => '521be4861056d8f3d8779b3730308b35a28ff3a7acb0f5ce03c0fa40fdd0cec06048322784b572852dc85e85f911ba0283c464ae7889b55ade7cc659a2da2547',
+    'id' => 1
 )));
 echo '</pre>';
