@@ -1,0 +1,5 @@
+.idea/
+package.json
+composer.lock
+config/db.php
+config/mail.php

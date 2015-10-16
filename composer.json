@@ -1,0 +1,7 @@
+{
+    "require": {
+        "tivoka/tivoka": "*",
+        "vlucas/valitron": "*",
+        "phpmailer/phpmailer": "^5.2"
+    }
+}
