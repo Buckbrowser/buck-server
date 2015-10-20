@@ -11,18 +11,17 @@ How to install the server
 > **Note**
 > You need to have a webserver **(apache)** installed with **php** and **mysql**
 
-Clone the server to a position where there is a web root. This means that it can be accessed by the browser from anywhere. After cloning the repository we will go to the server directory.
+Clone the server to a position where there is a web root. This means that it can be accessed by the browser from anywhere.
 ```
-git clone git@github.com:Langstra/buckbrowser.git
-cd buckbrowser/server
+git clone git@github.com:Buckbrowser/buck-server.git
 ```
 Next we need some composer packages. You need composer installed, if you do not have this then you can do that by checking out [getcomposer.org][1].
 ```
 composer install
 ```
-Next we need to create the database. We can do this by going into phpmyadmin or any other mysql client. Upload and execute **database.sql**.
+Next, we need to create the database. We can do this by going into phpmyadmin or any other mysql client. Upload and execute **database.sql**.
 
-Last thing to do is to edit *server/config/db.php* and fill it with the database credentials.
+Last thing to do is to edit *config/db.php* and fill it with the database credentials.
 
   [1]: https://getcomposer.org/download/
   
