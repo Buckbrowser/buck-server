@@ -21,8 +21,7 @@ class BankAccount extends Model
 
     /**
      * @param array $params Parameters for creating a contact
-     *                      token, company, first_name, last_name, email, street_name, house_number, zipcode, place_name are required
-     *                      id_country, default_payment_term, default_auto_reminder are optional
+     *                      token, account_holder, iban and bic are required
      * @return array
      */
     public function create($params)
@@ -75,7 +74,7 @@ class BankAccount extends Model
 
     /**
      * Get all the user information
-     * @param array $params Token is required
+     * @param array $params Token and id of the contact are required
      */
     public function read($params)
     {
@@ -107,39 +106,78 @@ class BankAccount extends Model
     }
 
     /**
-     * Update the given user details
-     * @param array $params Token is required. Other keys can be: first_name, last_name, password, email, language
+     * Update the back account of the company
+     * @param array $params Token and id are required. Other keys can be: account_holder, iban and bic
      */
     public function update($params)
     {
         $v = new Valitron\Validator($params);
-        $v->rule('required', 'token');
+        $v->rule('required', ['token', 'id']);
 
         if ($v->validate()) {
             if (($user = $this->token->validate($params['token'])) !== false) {
-                $params = $this->filter_parameters($params, array('password', 'email', 'language', 'first_name', 'last_name'));
-                $v->rule('email', 'email');
+                $bank_account_id = $params['id'];
+                $params = $this->filter_parameters($params, array('account_holder', 'iban', 'bic'));
+                $v->rule('iban', 'iban');
                 if ($v->validate()) {
 
-                    if (isset($params['password'])) {
-                        $params['password'] = create_hash($params['password']);
-                    }
                     $sql = 'UPDATE user SET';
                     foreach ($params as $key => $value) {
                         $sql .= ' ' . $key . ' = :' . $key . ',';
                         $parameters[':' . $key] = $value;
                     }
                     $sql = substr($sql, 0, -1);
-                    $sql .= ' WHERE id = :userid';
-                    $parameters[':userid'] = $user['id_user'];
+                    $sql .= ' WHERE id = :bank_account_id';
+                    $parameters[':bank_account_id'] = $bank_account_id;
 
                     $query = $this->db->prepare($sql);
-                    $query->execute($parameters);
+                    if ($query->execute($parameters)) {
+                        $this->db->commit();
+                        return $this->return_true();
+                    } else {
+                        $this->rollback();
+                        $this->what_error();
+                    }
 
-                    return $this->return_true();
                 } else {
                     return $this->update_error(array_keys($v->errors()));
                 }
+            } else {
+                return $this->auth_error();
+            }
+        } else {
+            return $this->param_error();
+        }
+    }
+
+    /**
+     * Deletes bank account of the company
+     * @param $params - token and id of the bank account are required
+     * @return array - returns errors as an array of true when successfully deleted.
+     */
+    public function delete($params)
+    {
+        $v = new Valitron\Validator($params);
+        $v->rule('required', ['token', 'id']);
+
+        if ($v->validate()) {
+            if (($user = $this->token->validate($params['token'])) !== false) {
+
+                $sql = 'DELETE FROM bank_account WHERE id = :bank_account_id';
+                $parameters = [':bank_account_id' => $params['id']];
+
+                $query = $this->db->prepare($sql);
+                $this->db->beginTransaction();
+
+                if ($query->execute($parameters)) {
+                    $this->db->commit();
+                    return $this->return_true();
+                } else {
+                    $this->rollback();
+                    $this->what_error();
+                }
+
+                return $this->return_true();
             } else {
                 return $this->auth_error();
             }

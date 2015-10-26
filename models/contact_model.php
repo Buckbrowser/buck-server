@@ -120,39 +120,83 @@ class Contact extends Model
     }
 
     /**
-     * Update the given user details
-     * @param array $params Token is required. Other keys can be: first_name, last_name, password, email, language
+     * @param array $params Parameters for updating a contact
+     *                      token, id are required
+     *                      company, first_name, last_name, email, street_name, house_number, zipcode, place_name, id_country, default_payment_term, default_auto_reminder are optional
+     * @return array
      */
     public function update($params)
     {
         $v = new Valitron\Validator($params);
-        $v->rule('required', 'token');
+        $v->rule('required', ['token', 'id']);
 
         if ($v->validate()) {
             if (($user = $this->token->validate($params['token'])) !== false) {
-                $params = $this->filter_parameters($params, array('password', 'email', 'language', 'first_name', 'last_name'));
                 $v->rule('email', 'email');
                 if ($v->validate()) {
+                    $contact_id = $params['id'];
+                    $params = $this->filter_parameters($params, array('company', 'first_name', 'last_name', 'email', 'street_name', 'house_number', 'zipcode', 'place_name', 'id_country', 'default_payment_term', 'default_auto_reminder'));
 
-                    if (isset($params['password'])) {
-                        $params['password'] = create_hash($params['password']);
-                    }
-                    $sql = 'UPDATE user SET';
+                    $sql = 'UPDATE contact SET';
                     foreach ($params as $key => $value) {
                         $sql .= ' ' . $key . ' = :' . $key . ',';
                         $parameters[':' . $key] = $value;
                     }
                     $sql = substr($sql, 0, -1);
-                    $sql .= ' WHERE id = :userid';
-                    $parameters[':userid'] = $user['id_user'];
+                    $sql .= ' WHERE id = :contact_id';
+                    $parameters[':contact_id'] = $contact_id;
 
                     $query = $this->db->prepare($sql);
-                    $query->execute($parameters);
+                    $this->db->beginTransaction();
+
+                    if ($query->execute($parameters)) {
+                        $this->db->commit();
+                        return $this->return_true();
+                    } else {
+                        $this->rollback();
+                        $this->what_error();
+                    }
 
                     return $this->return_true();
                 } else {
                     return $this->update_error(array_keys($v->errors()));
                 }
+            } else {
+                return $this->auth_error();
+            }
+        } else {
+            return $this->param_error();
+        }
+    }
+
+    /**
+     * Deletes contact of the company
+     * @param $params - token and id of the contact are required
+     * @return array - returns errors as an array of true when successfully deleted.
+     */
+    public function delete($params)
+    {
+        $v = new Valitron\Validator($params);
+        $v->rule('required', ['token', 'id']);
+
+        if ($v->validate()) {
+            if (($user = $this->token->validate($params['token'])) !== false) {
+
+                $sql = 'DELETE FROM contact WHERE id = :company_id';
+                $parameters = [':company_id' => $params['id']];
+
+                $query = $this->db->prepare($sql);
+                $this->db->beginTransaction();
+
+                if ($query->execute($parameters)) {
+                    $this->db->commit();
+                    return $this->return_true();
+                } else {
+                    $this->rollback();
+                    $this->what_error();
+                }
+
+                return $this->return_true();
             } else {
                 return $this->auth_error();
             }
