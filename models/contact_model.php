@@ -102,6 +102,7 @@ class Contact extends Model
                         'last_name' => $result->last_name,
                         'street_name' => $result->street_name,
                         'house_number' => $result->house_number,
+                        'email' => $result->email,
                         'zipcode' => $result->zipcode,
                         'place_name' => $result->place_name,
                         'id_country' => $result->id_country,
