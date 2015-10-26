@@ -242,6 +242,27 @@ class Company extends Model{
         }
     }
 
+    public function get_all_templates($params)
+    {
+        $v = new Valitron\Validator($params);
+        $v->rule('required', ['token']);
+
+        if ($v->validate()) {
+            if (($token = $this->token->validate($params['token'])) !== false) {
+                $sql = 'SELECT id, name FROM template WHERE id_company = :company_id';
+                $query = $this->db->prepare($sql);
+                $parameters = array(':company_id' => $token['id_company']);
+                $query->execute($parameters);
+                $result = $query->fetchAll(PDO::FETCH_ASSOC);
+                return $result;
+            } else {
+                return $this->auth_error();
+            }
+        } else {
+            return $this->param_error();
+        }
+    }
+
     public function delete($params)
     {
         $v = new Valitron\Validator($params);

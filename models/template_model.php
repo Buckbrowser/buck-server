@@ -6,7 +6,7 @@
  * Date: 17-12-14
  * Time: 11:01
  */
-class BankAccount extends Model
+class Template extends Model
 {
 
 
@@ -20,23 +20,26 @@ class BankAccount extends Model
 
 
     /**
-     * @param array $params Parameters for creating a contact
-     *                      token, account_holder, iban and bic are required
+     * @param array $params Parameters for creating a template
+     *                      token, name, content
      * @return array
      */
     public function create($params)
     {
-        $params = $this->filter_parameters($params, array('token', 'account_holder', 'iban', 'bic'));
+        $params = $this->filter_parameters($params, array('token', 'name', 'content'));
         $v = new \Valitron\Validator($params);
-        $v->rules('required', ['token', 'account_holder', 'iban', 'bic']);
+        $v->rules([
+                'required' => [['token'], ['name'], ['content']]
+            ]
+        );
 
+        $return_errors = null;
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
-                $v->rule('iban', 'iban');
                 if ($v->validate()) {
 
                     unset($params['token']);
-                    $sql = "INSERT INTO bank_account (";
+                    $sql = "INSERT INTO template (";
                     foreach ($params as $key => $value) {
                         $sql .= $key . ",";
                     }
@@ -52,16 +55,18 @@ class BankAccount extends Model
                     $query = $this->db->prepare($sql);
 
                     $this->db->beginTransaction();
-                    echo $sql;
+
                     if (!$query->execute($params)) {
                         $this->db->rollBack();
                         return $this->what_error();
                     } else {
+
                         $this->db->commit();
                         return $this->return_true();
+
                     }
                 } else {
-                    $return_errors['incorrect_fields'] = 'iban';
+                    $return_errors['incorrect_fields'] = 'email';
                 }
             } else {
                 return $this->auth_error();
@@ -74,7 +79,7 @@ class BankAccount extends Model
 
     /**
      * Get all the user information
-     * @param array $params Token and id of the contact are required
+     * @param array $params Token and id of the template are required
      */
     public function read($params)
     {
@@ -83,16 +88,15 @@ class BankAccount extends Model
 
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
-                $sql = 'SELECT * FROM bank_account WHERE id_company = :company_id AND id = :bank_account_id';
+                $sql = 'SELECT * FROM template WHERE id_company = :company_id AND id = :template_id';
                 $query = $this->db->prepare($sql);
-                $parameters = [':bank_account_id' => $params['id'], ':company_id' => $token['id_company']];
+                $parameters = [':template_id' => $params['id'], ':company_id' => $token['id_company']];
                 $query->execute($parameters);
                 if ($query->rowCount() > 0) {
                     $result = $query->fetch();
                     return array(
-                        'account_holder' => $result->account_holder,
-                        'iban' => $result->iban,
-                        'bic' => $result->bic
+                        'name' => $result->name,
+                        'content' => $result->content
                     );
                 } else {
                     return $this->what_error();
@@ -106,8 +110,10 @@ class BankAccount extends Model
     }
 
     /**
-     * Update the back account of the company
-     * @param array $params Token and id are required. Other keys can be: account_holder, iban and bic
+     * @param array $params Parameters for updating a template
+     *                      token, id are required
+     *                      name and content are optional
+     * @return array
      */
     public function update($params)
     {
@@ -116,22 +122,23 @@ class BankAccount extends Model
 
         if ($v->validate()) {
             if (($user = $this->token->validate($params['token'])) !== false) {
-                $bank_account_id = $params['id'];
-                $params = $this->filter_parameters($params, array('account_holder', 'iban', 'bic'));
-                $v->rule('iban', 'iban');
                 if ($v->validate()) {
+                    $template_id = $params['id'];
+                    $params = $this->filter_parameters($params, array('name', 'content'));
 
-                    $sql = 'UPDATE user SET';
+                    $sql = 'UPDATE template SET';
                     foreach ($params as $key => $value) {
                         $sql .= ' ' . $key . ' = :' . $key . ',';
                         $parameters[':' . $key] = $value;
                     }
                     $sql = substr($sql, 0, -1);
-                    $sql .= ' WHERE id = :bank_account_id AND id_company = :company_id';
-                    $parameters[':bank_account_id'] = $bank_account_id;
+                    $sql .= ' WHERE id = :template_id AND id_company = :company_id';
+                    $parameters[':template_id'] = $template_id;
                     $parameters[':company_id'] = $user['id_company'];
 
                     $query = $this->db->prepare($sql);
+                    $this->db->beginTransaction();
+
                     if ($query->execute($parameters)) {
                         $this->db->commit();
                         return $this->return_true();
@@ -140,6 +147,7 @@ class BankAccount extends Model
                         $this->what_error();
                     }
 
+                    return $this->return_true();
                 } else {
                     return $this->update_error(array_keys($v->errors()));
                 }
@@ -152,8 +160,8 @@ class BankAccount extends Model
     }
 
     /**
-     * Deletes bank account of the company
-     * @param $params - token and id of the bank account are required
+     * Deletes contact of the company
+     * @param $params - token and id of the contact are required
      * @return array - returns errors as an array of true when successfully deleted.
      */
     public function delete($params)
@@ -164,8 +172,8 @@ class BankAccount extends Model
         if ($v->validate()) {
             if (($user = $this->token->validate($params['token'])) !== false) {
 
-                $sql = 'DELETE FROM bank_account WHERE id = :bank_account_id AND id_company = :company_id';
-                $parameters = [':bank_account_id' => $params['id'], 'company_id' => $user['id_company']];
+                $sql = 'DELETE FROM template WHERE id = :template_id id_company = :company_id';
+                $parameters = [':template_id' => $params['id'], ':company_id' => $user['id_company']];
 
                 $query = $this->db->prepare($sql);
                 $this->db->beginTransaction();

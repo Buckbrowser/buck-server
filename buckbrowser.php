@@ -62,11 +62,11 @@ $buckbrowser_server = array(
     'PaymentMethod.get_all'               =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
     'Payment.create'                      =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
     'Payment.delete'                      =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
-    'Template.create'                     =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
-    'Template.read'                       =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
-    'Template.update'                     =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
-    'Template.delete'                     =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
-    'Template.get_all'                    =>  function($params) { return BuckBrowser::load_model('User')->create($params); },
+    'Template.create'                     =>  function($params) { return BuckBrowser::load_model('Template')->create($params); },
+    'Template.read'                       =>  function($params) { return BuckBrowser::load_model('Template')->read($params); },
+    'Template.update'                     =>  function($params) { return BuckBrowser::load_model('Template')->update($params); },
+    'Template.delete'                     =>  function($params) { return BuckBrowser::load_model('Template')->delete($params); },
+    'Template.get_all'                    =>  function($params) { return BuckBrowser::load_model('Template')->get_all($params); },
 );
 
 Tivoka\Server::provide($buckbrowser_server)->dispatch();

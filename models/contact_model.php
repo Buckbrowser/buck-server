@@ -143,8 +143,9 @@ class Contact extends Model
                         $parameters[':' . $key] = $value;
                     }
                     $sql = substr($sql, 0, -1);
-                    $sql .= ' WHERE id = :contact_id';
+                    $sql .= ' WHERE id = :contact_id AND id_company = :company_id';
                     $parameters[':contact_id'] = $contact_id;
+                    $parameters[':company_id'] = $user['id_company'];
 
                     $query = $this->db->prepare($sql);
                     $this->db->beginTransaction();
@@ -182,8 +183,8 @@ class Contact extends Model
         if ($v->validate()) {
             if (($user = $this->token->validate($params['token'])) !== false) {
 
-                $sql = 'DELETE FROM contact WHERE id = :company_id';
-                $parameters = [':company_id' => $params['id']];
+                $sql = 'DELETE FROM contact WHERE id = :contact_id AND id_company = :company_id';
+                $parameters = [':contact_id' => $params['id'], 'company_id' => $user['id_company']];
 
                 $query = $this->db->prepare($sql);
                 $this->db->beginTransaction();
