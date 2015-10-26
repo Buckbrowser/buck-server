@@ -57,8 +57,9 @@ class BankAccount extends Model
                         $this->db->rollBack();
                         return $this->what_error();
                     } else {
+                        $id = $this->db->lastInsertId();
                         $this->db->commit();
-                        return $this->return_true();
+                        return ['id' => $id];
                     }
                 } else {
                     $return_errors['incorrect_fields'] = 'iban';
