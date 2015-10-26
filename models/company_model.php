@@ -207,7 +207,28 @@ class Company extends Model{
 
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
-                $sql = 'SELECT c.id, c.company FROM company_has_contact as cc INNER JOIN contact as c ON c.id = cc.contact_id WHERE cc.company_id = :company_id';
+                $sql = 'SELECT id, company FROM contact WHERE id_company = :company_id';
+                $query = $this->db->prepare($sql);
+                $parameters = array(':company_id' => $token['id_company']);
+                $query->execute($parameters);
+                $result = $query->fetchAll(PDO::FETCH_ASSOC);
+                return $result;
+            } else {
+                return $this->auth_error();
+            }
+        } else {
+            return $this->param_error();
+        }
+    }
+
+    public function get_all_bank_accounts($params)
+    {
+        $v = new Valitron\Validator($params);
+        $v->rule('required', ['token']);
+
+        if ($v->validate()) {
+            if (($token = $this->token->validate($params['token'])) !== false) {
+                $sql = 'SELECT id, account_holder, iban, bic FROM bank_account WHERE id_company = :company_id';
                 $query = $this->db->prepare($sql);
                 $parameters = array(':company_id' => $token['id_company']);
                 $query->execute($parameters);

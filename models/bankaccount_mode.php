@@ -6,7 +6,7 @@
  * Date: 17-12-14
  * Time: 11:01
  */
-class Contact extends Model
+class BankAccount extends Model
 {
 
 
@@ -27,21 +27,17 @@ class Contact extends Model
      */
     public function create($params)
     {
-        $params = $this->filter_parameters($params, array('token', 'company', 'first_name', 'last_name', 'email', 'street_name', 'house_number', 'zipcode', 'place_name', 'id_country', 'default_payment_term', 'default_auto_reminder'));
+        $params = $this->filter_parameters($params, array('token', 'account_holder', 'iban', 'bic'));
         $v = new \Valitron\Validator($params);
-        $v->rules([
-                'required' => [['token'], ['company'], ['first_name'], ['last_name'], ['email'], ['street_name'], ['house_number'], ['zipcode'], ['place_name']]
-            ]
-        );
+        $v->rules('required', ['token', 'account_holder', 'iban', 'bic']);
 
-        $return_errors = null;
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
-                $v->rule('email', 'email');
+                $v->rule('iban', 'iban');
                 if ($v->validate()) {
 
                     unset($params['token']);
-                    $sql = "INSERT INTO contact (";
+                    $sql = "INSERT INTO bank_account (";
                     foreach ($params as $key => $value) {
                         $sql .= $key . ",";
                     }
@@ -57,18 +53,16 @@ class Contact extends Model
                     $query = $this->db->prepare($sql);
 
                     $this->db->beginTransaction();
-
+                    echo $sql;
                     if (!$query->execute($params)) {
                         $this->db->rollBack();
                         return $this->what_error();
                     } else {
-
                         $this->db->commit();
                         return $this->return_true();
-
                     }
                 } else {
-                    $return_errors['incorrect_fields'] = 'email';
+                    $return_errors['incorrect_fields'] = 'iban';
                 }
             } else {
                 return $this->auth_error();
@@ -90,23 +84,16 @@ class Contact extends Model
 
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
-                $sql = 'SELECT * FROM contact WHERE id_company = :company_id AND id = :contact_id';
+                $sql = 'SELECT * FROM bank_account WHERE id_company = :company_id AND id = :bank_account_id';
                 $query = $this->db->prepare($sql);
-                $parameters = [':contact_id' => $params['id'], ':company_id' => $token['id_company']];
+                $parameters = [':bank_account_id' => $params['id'], ':company_id' => $token['id_company']];
                 $query->execute($parameters);
                 if ($query->rowCount() > 0) {
                     $result = $query->fetch();
                     return array(
-                        'company' => $result->company,
-                        'first_name' => $result->first_name,
-                        'last_name' => $result->last_name,
-                        'street_name' => $result->street_name,
-                        'house_number' => $result->house_number,
-                        'zipcode' => $result->zipcode,
-                        'place_name' => $result->place_name,
-                        'id_country' => $result->id_country,
-                        'default_payment_term' => $result->default_payment_term,
-                        'default_auto_reminder' => $result->default_auto_reminder,
+                        'account_holder' => $result->account_holder,
+                        'iban' => $result->iban,
+                        'bic' => $result->bic
                     );
                 } else {
                     return $this->what_error();
