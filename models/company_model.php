@@ -30,7 +30,7 @@ class Company extends Model{
 
         if($v->validate()) {
             if(($token = $this->token->validate($params['token'])) !== false) {
-                $params = $this->filter_parameters($params, array('name', 'street_name', 'house_number', 'zipcode', 'place_name', 'id_country', 'email', 'tax_number', 'company_registration_number', 'default_invoice_number_prefix', 'default_payment_term'));
+                $params = $this->filter_parameters($params, array('name', 'street_name', 'house_number', 'zipcode', 'place_name', 'id_country', 'email', 'iban', 'bic', 'tax_number', 'company_registration_number', 'default_invoice_number_prefix', 'default_payment_term'));
                 $v->rule('email', 'email');
                 if ($this->email_used($params['email'])) $used_values[] = 'email';
                 if ($used_values === null) {
@@ -109,7 +109,7 @@ class Company extends Model{
 
     private function get_company($id)
     {
-        $sql = 'SELECT name, street_name, house_number, zipcode, place_name, id_country, email, tax_number, company_registration_number, default_payment_term, default_invoice_number_prefix, registration_date FROM company WHERE id = :id_company AND deleted_at IS NULL';
+        $sql = 'SELECT name, street_name, house_number, zipcode, place_name, id_country, email, iban, bic, tax_number, company_registration_number, default_payment_term, default_invoice_number_prefix, registration_date FROM company WHERE id = :id_company AND deleted_at IS NULL';
         $query = $this->db->prepare($sql);
         $parameters = array(':id_company' => $id);
         $query->execute($parameters);
@@ -123,6 +123,8 @@ class Company extends Model{
                 'place_name' => $result->place_name,
                 'id_country' => $result->id_country,
                 'email' => $result->email,
+                'iban' => $result->iban,
+                'bic' => $result->bic,
                 'tax_number' => $result->tax_number,
                 'company_registration_number' => $result->company_registration_number,
                 'default_payment_term' => $result->default_payment_term,
@@ -161,7 +163,7 @@ class Company extends Model{
     /**
      * Update the details of the company the user is currently logged onto.
      * Authorization: 1
-     * @param array $params Token is required. Other keys can be: name, street_name, house_number, zipcode, place_name, id_country, email, tax_number, company_registration_number, default_invoice_number_prefix, default_payment_term
+     * @param array $params Token is required. Other keys can be: name, street_name, house_number, zipcode, place_name, id_country, email, iban, bic, tax_number, company_registration_number, default_invoice_number_prefix, default_payment_term
      */
     public function update($params)
     {
@@ -170,7 +172,7 @@ class Company extends Model{
 
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'], 1)) !== false) {
-                $params = $this->filter_parameters($params, array('name', 'street_name', 'house_number', 'zipcode', 'place_name', 'id_country', 'email', 'tax_number', 'company_registration_number', 'default_invoice_number_prefix', 'default_payment_term'));
+                $params = $this->filter_parameters($params, array('name', 'street_name', 'house_number', 'zipcode', 'place_name', 'id_country', 'email', 'iban', 'bic', 'tax_number', 'company_registration_number', 'default_invoice_number_prefix', 'default_payment_term'));
 
                 if ($v->validate()) {
                     $sql = 'UPDATE company SET';
@@ -208,27 +210,6 @@ class Company extends Model{
         if ($v->validate()) {
             if (($token = $this->token->validate($params['token'])) !== false) {
                 $sql = 'SELECT id, company FROM contact WHERE id_company = :company_id';
-                $query = $this->db->prepare($sql);
-                $parameters = array(':company_id' => $token['id_company']);
-                $query->execute($parameters);
-                $result = $query->fetchAll(PDO::FETCH_ASSOC);
-                return $result;
-            } else {
-                return $this->auth_error();
-            }
-        } else {
-            return $this->param_error();
-        }
-    }
-
-    public function get_all_bank_accounts($params)
-    {
-        $v = new Valitron\Validator($params);
-        $v->rule('required', ['token']);
-
-        if ($v->validate()) {
-            if (($token = $this->token->validate($params['token'])) !== false) {
-                $sql = 'SELECT id, account_holder, iban, bic FROM bank_account WHERE id_company = :company_id';
                 $query = $this->db->prepare($sql);
                 $parameters = array(':company_id' => $token['id_company']);
                 $query->execute($parameters);
