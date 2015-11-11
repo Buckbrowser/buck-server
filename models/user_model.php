@@ -64,7 +64,7 @@ class User extends Model
 
                         $auth = new Token($this->db);
 
-                        require_once 'core/mail.php';
+                        require_once 'core/Mail.php';
 
                         $mail = new Mail();
 
